@@ -4,6 +4,8 @@
 - [x] Detect someone says !links (=> link.tree)
 - [ ] Deploy on Vercel/Heroku
 
+  - [ ] Deploy on Vercel (base Node server) : https://blog.devsharma.live/deploy-a-node-server-to-vercel
+
 - [ ] Detect !wow to start sound
 
 - [ ] Convert to TS

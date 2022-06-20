@@ -4,9 +4,20 @@
   "description": "Twitch bot",
   "main": "index.js",
   "type": "module",
+  "builds": [
+    {
+      "src": "src/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.js"
+    }
+  ],
   "scripts": {
     "dev": "NODE_ENV=development node src/server.js",
-    "build": "",
     "start": "node src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "push": "git push && git push personal main"
