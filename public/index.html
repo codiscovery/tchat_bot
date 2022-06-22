@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <audio controls>
+      <source src="media/sounds/mario_letsgo.mp3" type="audio/mp3" />
+    </audio>
+    <button>Run sound</button>
+    <script>
+      var socket = new WebSocket("ws://localhost:3001/socket");
+      socket.onopen = function (e) {
+        socket.send(
+          JSON.stringify({
+            type: "join",
+            message: "Hello from the client!",
+          })
+        );
+      };
+
+      document.querySelector("button").addEventListener("click", () => {
+        document.querySelector("audio").play();
+      });
+    </script>
+  </body>
+</html>

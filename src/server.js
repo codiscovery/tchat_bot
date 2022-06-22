@@ -1,32 +1,68 @@
 import dotenv from "dotenv";
-import tmi from "tmi.js";
+
+import path from "node:path";
+import * as url from "node:url";
+
+import Fastify from "fastify";
+import fastifyStatic from "@fastify/static";
+import fastifySocket from "@fastify/websocket";
 
 dotenv.config();
 
-const { TWITCH_USERNAME, TWITCH_PASSWORD, NODE_ENV } = process.env;
+const { PORT, NODE_ENV } = process.env;
+
+const dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const debug = NODE_ENV === "development";
 
-const client = new tmi.Client({
-  channels: [TWITCH_USERNAME],
-  options: { debug },
-  identity: {
-    username: TWITCH_USERNAME,
-    password: TWITCH_PASSWORD,
-  },
+let logger = true;
+if (debug) {
+  logger = {
+    level: "trace",
+  };
+}
+
+// Create a server instance
+const fastify = Fastify({ logger });
+
+// Server setup
+
+fastify.register(fastifySocket);
+fastify.register(async function (fastify) {
+  fastify.get(
+    "/socket",
+    { websocket: true },
+    (connection /* SocketStream */, req /* Fastify Request */) => {
+      connection.socket.on("message", (rawSocketData) => {
+        const socketData = JSON.parse(rawSocketData.toString());
+        // message.toString() === 'hi from client!'
+        if (socketData.type === "join") {
+          fastify.log.trace(
+            `received message from client: ${socketData.message}`
+          );
+        }
+      });
+    }
+  );
 });
 
-const say = (message, { client, channel = TWITCH_USERNAME } = {}) => {
-  client.say(channel, `[BOT] ${message}`);
-};
-
-client.connect().then(() => {
-  //   console.log("Bot is connected to Twitch");
-  say("Salut, je viens de me connecter", { client });
+fastify.register(fastifyStatic, {
+  root: path.join(dirname, "..", "public"),
+  prefix: "/overlay",
 });
 
-client.on("message", (channel, tags, message, self) => {
-  if (message.toLowerCase() === "!links") {
-    say("https://linktr.ee/codiscovery", { client });
+// Server routes
+
+fastify.get("/", async (request, response) => {
+  response.type("application/json").code(200);
+  return { name: "Codiscovery t'chat bot" };
+});
+
+// Server start
+fastify.listen({ port: PORT }, (err, address) => {
+  if (err) {
+    fastify.log.error(err);
+    throw err;
   }
+  fastify.log.info(`server listening on ${address}`);
 });
